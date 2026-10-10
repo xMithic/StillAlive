@@ -19,7 +19,7 @@ const T = (text, ms) => ({ text, ms });
 
 const lyrics = [
   // Ejemplo del formato (bórralo y pega tus líneas):
-  T(IMG.APERTURE + "Tu texto aquí\n", 3 * note4_ms),
-  T("", note1_ms),                       // texto vacío = pausa
+  T(IMG.APERTURE + "This was a triumph\n", 3 * note4_ms),
+  T("I'm making a note here: Huge success", note1_ms),                       // texto vacío = pausa
   T(CLEAR + "Otra pantalla\n", note1_ms), // CLEAR limpia el cuadro de letra
 ];
