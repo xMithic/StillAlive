@@ -37,18 +37,15 @@
     border:1px solid var(--fg); padding:0.6em 1.2ch; cursor:pointer;
     text-shadow:0 0 5px rgba(255,176,0,.55); letter-spacing:.15em; text-transform:uppercase;
     box-shadow:0 0 10px rgba(255,176,0,.2);
-    /* Transición suave tanto al entrar como al salir del estado presionado */
     transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, text-shadow 0.3s ease, transform .2s ease;
     outline: none;
     -webkit-tap-highlight-color: transparent;
   }
   
-  /* En PC el hover normal de escritorio */
   @media (hover: hover) {
     #btn-translate:hover{background:var(--fg);color:#000;box-shadow:0 0 18px rgba(255,176,0,.7);text-shadow:none}
   }
 
-  /* El botón se pone naranja instantáneamente y de forma suave cuando se MANTIENE presionado */
   #btn-translate:active {
     background: var(--fg) !important;
     color: #000 !important;
@@ -57,8 +54,14 @@
     transform: scale(.95);
   }
 
+  /* Ajuste para pantallas pequeñas: en lugar de mandarlo a la esquina absoluta, 
+     lo alineamos con el margen izquierdo de la caja #screen cuando esta se ajusta o se escala */
   @media (max-width: 1100px){
-    #lang-container{left:1rem;bottom:1rem;transform:none}
+    #lang-container{
+      /* Mantiene la proporción respecto al ancho de la pantalla o se alinea al grid */
+      left: max(1rem, calc(50% - 51ch));
+      bottom: 1rem;
+    }
   }
 
   /* Onda luminosa de letras al traducir */
@@ -81,13 +84,9 @@
 <script src="lyrics.js"></script>
 <script src="lyrics-es.js"></script>
 <script>
-/* =========================================================================
-   AJUSTES PRINCIPALES
-   ========================================================================= */
-const OFFSET_MS = 0;              // Retraso general de sincronización
-const AUDIO_DELAY_MS = 6750;      // Milisegundos para que empiece a sonar la música
-const BUTTON_DELAY_MS = 7600;     // Milisegundos para que aparezca el botón de traducir
-/* ========================================================================= */
+const OFFSET_MS = 0;              
+const AUDIO_DELAY_MS = 6750;      
+const BUTTON_DELAY_MS = 7600;     
 
 const q = new URLSearchParams(location.search);
 const $ = s => document.querySelector(s);
@@ -95,14 +94,12 @@ const audio = $("#song");
 let audioOk = true;
 audio.addEventListener("error", () => { audioOk = false; $("#warn").textContent = "No se encontró still-alive.flac (se mostrará solo la letra)"; });
 
-/* Escala el tamaño para que los caracteres quepan en pantalla */
 function fit(){
   const fs = Math.min(16, innerWidth / 104 / 0.6, innerHeight / 38);
   $("#screen").style.setProperty("--fs", fs + "px");
 }
 addEventListener("resize", fit); fit();
 
-/* Cuadro de créditos */
 function put(grid,r,c,s){ grid[r] = grid[r].slice(0,c) + s + grid[r].slice(c+s.length); }
 (function(){
   const g = Array.from({length:16}, () => " ".repeat(49));
@@ -115,7 +112,6 @@ function put(grid,r,c,s){ grid[r] = grid[r].slice(0,c) + s + grid[r].slice(c+s.l
 
 function SPEED_VAL(){ return +(q.get("speed") ?? 1); }
 
-/* Línea de tiempo para inglés y español */
 function createTimeline(rawLyrics){
   let totalMs = 0;
   const list = rawLyrics.map(e => {
@@ -153,13 +149,12 @@ function renderTimeline(timeline, t){
   return [out, img];
 }
 
-/* Estado de idioma y transición */
-let currentLang = "en"; // "en" | "es"
+let currentLang = "en"; 
 let isTransitioning = false;
 let transStartTime = 0;
 let transFrom = "en";
 let transTo = "es";
-const TRANS_DURATION = 1250; // 1.25 segundos para la onda completa
+const TRANS_DURATION = 1250; 
 const GLYPHS = "0123456789ABCDEF$#@%*+=-/;:?<>!~";
 
 function escapeHtml(s){
@@ -270,41 +265,33 @@ function frame(now){
 }
 
 $("#start").addEventListener("click", () => {
-  // 1. Oculta y remueve la pantalla de inicio inmediatamente
   const startScreen = $("#start");
   if (startScreen) startScreen.remove();
 
-  // 2. Inicia el contador de tiempo visual al instante
   t0 = performance.now();
 
-  // --- TRUCO ANTI-BLOQUEO PARA INSTAGRAM ---
-  // Desbloqueamos el audio inmediatamente tocando y silenciando un instante dentro del evento del usuario.
   if (audioOk) {
     audio.volume = 0;
     audio.play().then(() => {
       audio.pause();
       audio.currentTime = 0;
-      audio.volume = 1; // Restauramos el volumen
+      audio.volume = 1; 
     }).catch(() => {});
   }
-  // ------------------------------------------
 
-  // 3. Reproduce la música aplicando el retraso configurado
   if (audioOk) {
     setTimeout(() => {
       audio.play().catch(() => { audioOk = false; });
     }, AUDIO_DELAY_MS);
   }
 
-  // 4. Muestra el botón de traducir suavemente según el tiempo configurado en BUTTON_DELAY_MS
   setTimeout(() => {
     const langContainer = $("#lang-container");
     langContainer.style.display = "flex";
-    langContainer.offsetHeight; // Forzar reflow para activar la animación de opacidad
+    langContainer.offsetHeight; 
     langContainer.classList.add("show");
   }, BUTTON_DELAY_MS);
 
-  // 5. Arranca el bucle de renderizado de la letra
   requestAnimationFrame(frame);
 });
 </script>
