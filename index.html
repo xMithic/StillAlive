@@ -38,20 +38,19 @@
 <script src="art.js"></script>
 <script src="lyrics.js"></script>
 <script>
-/* Ajustes (también por URL: ?offset=500&speed=1.02&audioDelay=1000)
-   OFFSET_MS: retraso de la letra respecto al audio (+ la retrasa, - la adelanta)
-   AUDIO_DELAY_MS: retraso con el que empezará a sonar la música en milisegundos
-   SPEED: 1 = tiempos originales; >1 = letra más lenta */
+/* Ajustes (también por URL: ?offset=500&speed=1.02&audioDelay=1500)
+   OFFSET_MS: retraso general de sincronización
+   AUDIO_DELAY_MS: milisegundos de retraso para que empiece a sonar la música */
 const q = new URLSearchParams(location.search);
 const OFFSET_MS = +(q.get("offset") ?? 0);
-const AUDIO_DELAY_MS = +(q.get("audioDelay") ?? 2500); // Cambia este valor (en ms) para ajustar el retraso de la música
+const AUDIO_DELAY_MS = +(q.get("audioDelay") ?? 1500); // Cambia este valor para ajustar el retraso de la música
 
 const $ = s => document.querySelector(s);
 const audio = $("#song");
 let audioOk = true;
 audio.addEventListener("error", () => { audioOk = false; $("#warn").textContent = "No se encontró still-alive.flac (se mostrará solo la letra)"; });
 
-/* Escala el tamaño para que los 102 caracteres quepan en pantalla */
+/* Escala el tamaño para que los caracteres quepan en pantalla */
 function fit(){
   const fs = Math.min(16, innerWidth / 104 / 0.6, innerHeight / 38);
   $("#screen").style.setProperty("--fs", fs + "px");
@@ -78,9 +77,10 @@ const ev = lyrics.map(e => {
     else if (text[0] === "\u0003") { clear = true; text = text.slice(1); }
     else break;
   }
-  const o = { text, image, clear, start: total, dur: e.ms * SPEED };
+  const o = { text, image, clear, start: total, dur: e.ms * SPEED_VAL() };
   total += o.dur; return o;
 });
+function SPEED_VAL(){ return +(q.get("speed") ?? 1); }
 
 function render(t){
   let from = 0, img = null, out = "";
@@ -97,8 +97,11 @@ function render(t){
 
 let t0 = 0, last = "";
 function frame(now){
-  const t = (audioOk && !audio.error ? audio.currentTime * 1000 : now - t0) - OFFSET_MS;
+  // Tiempo basado en el reloj interno del navegador desde que se hizo clic
+  const elapsed = now - t0;
+  const t = elapsed - OFFSET_MS;
   const done = t > total;
+  
   if (t >= 0){
     const [txt, img] = render(t);
     const key = txt + "|" + img + "|" + done;
@@ -113,16 +116,22 @@ function frame(now){
 }
 
 $("#start").addEventListener("click", () => {
-  $("#start").remove();
+  // 1. Oculta y remueve la pantalla de inicio inmediatamente
+  $("#start.remove")?.remove();
+  const startScreen = $("#start");
+  if (startScreen) startScreen.remove();
+
+  // 2. Inicia el contador de tiempo visual al instante
   t0 = performance.now();
-  
-  // Inicia la letra de inmediato y retrasa la reproducción del audio con AUDIO_DELAY_MS
+
+  // 3. Reproduce la música aplicando el retraso configurado mediante setTimeout
   if (audioOk) {
     setTimeout(() => {
       audio.play().catch(() => { audioOk = false; });
     }, AUDIO_DELAY_MS);
   }
 
+  // 4. Arranca el bucle de renderizado de la letra
   requestAnimationFrame(frame);
 });
 </script>
