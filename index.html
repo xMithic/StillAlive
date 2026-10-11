@@ -32,18 +32,21 @@
     display: none; opacity: 0; transition: opacity 1.5s ease;}
   #lang-container.show { display: flex; opacity: 1; }
 
-  #btn-translate{font-family:inherit;font-size:1rem;color:var(--fg);background:#000;
-    border:1px solid var(--fg);padding:0.6em 1.2ch;cursor:pointer;
-    text-shadow:0 0 5px rgba(255,176,0,.55);letter-spacing:.15em;text-transform:uppercase;
+  #btn-translate{
+    font-family:inherit; font-size:1rem; color:var(--fg); background:#000;
+    border:1px solid var(--fg); padding:0.6em 1.2ch; cursor:pointer;
+    text-shadow:0 0 5px rgba(255,176,0,.55); letter-spacing:.15em; text-transform:uppercase;
     box-shadow:0 0 10px rgba(255,176,0,.2);
-    transition:background 0.4s ease, color 0.4s ease, box-shadow 0.4s ease, text-shadow 0.4s ease, transform .2s ease;
-    outline:none}
+    transition: background 0.4s ease, color 0.4s ease, box-shadow 0.4s ease, text-shadow 0.4s ease, transform .2s ease;
+    outline: none;
+    -webkit-tap-highlight-color: transparent; /* Elimina el cuadro azul/gris al tocar en móviles */
+  }
   
-  /* Efecto hover clásico cuando pasas el cursor */
+  /* Efecto hover en PC */
   #btn-translate:hover{background:var(--fg);color:#000;box-shadow:0 0 18px rgba(255,176,0,.7);text-shadow:none}
   #btn-translate:active{transform:scale(.95)}
   
-  /* Destello temporal suave al hacer clic (dura exactamente 1 segundo) */
+  /* Destello temporal suave al hacer clic (durará exactamente 1 segundo) */
   #btn-translate.active-flash {
     background: var(--fg) !important;
     color: #000 !important;
@@ -80,7 +83,7 @@
    ========================================================================= */
 const OFFSET_MS = 0;              // Retraso general de sincronización
 const AUDIO_DELAY_MS = 6750;      // Milisegundos para que empiece a sonar la música
-const BUTTON_DELAY_MS = 8000;     // Milisegundos para que aparezca el botón de traducir (7500ms = 7.5s)
+const BUTTON_DELAY_MS = 8000;     // Milisegundos para que aparezca el botón de traducir (8s)
 /* ========================================================================= */
 
 const q = new URLSearchParams(location.search);
@@ -219,13 +222,13 @@ function toggleLang(){
     btn.textContent = (currentLang === "es") ? "Deshacer" : "Traducir";
     btn.setAttribute("title", (currentLang === "es") ? "Volver a inglés" : "Traducir a español");
 
-    // Limpia cualquier temporizador previo si se hace clic rápidamente otra vez
+    // Reinicia el temporizador si se pulsa rápidamente de nuevo
     if (flashTimeout) clearTimeout(flashTimeout);
 
-    // Activa el destello naranja de forma suave
+    // Activa la clase del destello
     btn.classList.add("active-flash");
 
-    // Quita la clase después de exactamente 1 segundo (1000ms) de forma suave
+    // Remueve la clase exactamente 1 segundo después para que regrese suavemente a los bordes
     flashTimeout = setTimeout(() => {
       btn.classList.remove("active-flash");
     }, 1000);
