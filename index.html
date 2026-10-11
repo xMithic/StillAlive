@@ -26,8 +26,8 @@
   #start b{letter-spacing:.25em;font-size:1.5rem}
   #start small{opacity:.65}
   
-  /* Contenedor del botón a la izquierda (oculto por defecto) */
-  #lang-container{position:fixed;left:2.5rem;top:50%;transform:translateY(-50%);z-index:20;
+  /* Contenedor del botón ubicado abajo a la izquierda (alineado con la caja de texto) */
+  #lang-container{position:fixed;left:calc(50% - 51ch);bottom:calc(50% - 18em);z-index:20;
     display:flex;flex-direction:column;gap:0.4em;align-items:flex-start;
     display: none; opacity: 0; transition: opacity 1.5s ease;}
   #lang-container.show { display: flex; opacity: 1; }
@@ -48,7 +48,7 @@
     #btn-translate:hover{background:var(--fg);color:#000;box-shadow:0 0 18px rgba(255,176,0,.7);text-shadow:none}
   }
 
-  /* El botón se pone naranja instantáneamente y de forma suave cuando se MANTIENE presionado (tanto en PC como al tocar la pantalla táctil) */
+  /* El botón se pone naranja instantáneamente y de forma suave cuando se MANTIENE presionado */
   #btn-translate:active {
     background: var(--fg) !important;
     color: #000 !important;
@@ -57,8 +57,8 @@
     transform: scale(.95);
   }
 
-  @media (max-width: 900px){
-    #lang-container{left:1rem;top:1rem;transform:none}
+  @media (max-width: 1100px){
+    #lang-container{left:1rem;bottom:1rem;transform:none}
   }
 
   /* Onda luminosa de letras al traducir */
@@ -86,7 +86,7 @@
    ========================================================================= */
 const OFFSET_MS = 0;              // Retraso general de sincronización
 const AUDIO_DELAY_MS = 6750;      // Milisegundos para que empiece a sonar la música
-const BUTTON_DELAY_MS = 7600;     // Milisegundos para que aparezca el botón de traducir (8s)
+const BUTTON_DELAY_MS = 7600;     // Milisegundos para que aparezca el botón de traducir
 /* ========================================================================= */
 
 const q = new URLSearchParams(location.search);
