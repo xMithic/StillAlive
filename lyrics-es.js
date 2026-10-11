@@ -23,7 +23,7 @@ const lyrics_es = [
     T("se debe hacer.\n", 3 * note4_ms + note2_ms),
     T("", note2_ms),
     T("Por el bien de todos nosotros.\n", 6 * note8_ms + 3 * note4_ms),
-    T("Excepto los muerto, se entiende.\n\n", 8 * note8_ms),
+    T("Excepto los muertos, se entiende.\n\n", 8 * note8_ms),
     T("", note2_ms),
     T("No te desanimes...\n", 4 * note8_ms + 2 * note4_ms),
     T("Si fallaste una vez...\n", 2 * note8_ms + 2 * note4_ms),
