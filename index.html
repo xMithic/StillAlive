@@ -25,9 +25,28 @@
     align-items:center;justify-content:center;gap:1em;cursor:pointer;text-align:center}
   #start b{letter-spacing:.25em;font-size:1.5rem}
   #start small{opacity:.65}
+  /* Contenedor del botón a la izquierda */
+  #lang-container{position:fixed;left:2.5rem;top:50%;transform:translateY(-50%);z-index:20;
+    display:flex;flex-direction:column;gap:0.4em;align-items:flex-start}
+  #btn-translate{font-family:inherit;font-size:1rem;color:var(--fg);background:#000;
+    border:1px solid var(--fg);padding:0.6em 1.2ch;cursor:pointer;
+    text-shadow:0 0 5px rgba(255,176,0,.55);letter-spacing:.15em;text-transform:uppercase;
+    box-shadow:0 0 10px rgba(255,176,0,.2);transition:all .2s ease;outline:none}
+  #btn-translate:hover{background:var(--fg);color:#000;box-shadow:0 0 18px rgba(255,176,0,.7);text-shadow:none}
+  #btn-translate:active{transform:scale(.95)}
+  @media (max-width: 900px){
+    #lang-container{left:1rem;top:1rem;transform:none}
+  }
+
+  /* Onda luminosa de letras al traducir */
+  .wave-char{color:#fff;text-shadow:0 0 6px #fff, 0 0 12px #ffb000, 0 0 22px #ffb000;
+    font-weight:bold;display:inline-block}
 </style>
 </head>
 <body>
+<div id="lang-container">
+  <button id="btn-translate" type="button">Traducir</button>
+</div>
 <div id="start"><b>CONTINUAR</b><span>[ para iniciar ]</span><small id="warn"></small></div>
 <div id="screen">
   <pre id="lyrics"></pre>
@@ -37,6 +56,7 @@
 <audio id="song" src="still-alive.flac" preload="auto"></audio>
 <script src="art.js"></script>
 <script src="lyrics.js"></script>
+<script src="lyrics-es.js"></script>
 <script>
 /* Ajustes (también por URL: ?offset=500&speed=1.02&audioDelay=1500)
    OFFSET_MS: retraso general de sincronización
@@ -68,32 +88,126 @@ function put(grid,r,c,s){ grid[r] = grid[r].slice(0,c) + s + grid[r].slice(c+s.l
   $("#credits").textContent = g.join("\n");
 })();
 
-/* Línea de tiempo */
-let total = 0;
-const ev = lyrics.map(e => {
-  let text = e.text, image = null, clear = false, m;
-  while (true) {
-    if ((m = /^\u0001(\w+)\u0002/.exec(text))) { image = m[1]; text = text.slice(m[0].length); }
-    else if (text[0] === "\u0003") { clear = true; text = text.slice(1); }
-    else break;
-  }
-  const o = { text, image, clear, start: total, dur: e.ms * SPEED_VAL() };
-  total += o.dur; return o;
-});
 function SPEED_VAL(){ return +(q.get("speed") ?? 1); }
 
-function render(t){
+/* Línea de tiempo para inglés y español */
+function createTimeline(rawLyrics){
+  let totalMs = 0;
+  const list = rawLyrics.map(e => {
+    let text = e.text, image = null, clear = false, m;
+    while (true) {
+      if ((m = /^\u0001(\w+)\u0002/.exec(text))) { image = m[1]; text = text.slice(m[0].length); }
+      else if (text[0] === "\u0003") { clear = true; text = text.slice(1); }
+      else break;
+    }
+    const o = { text, image, clear, start: totalMs, dur: e.ms * SPEED_VAL() };
+    totalMs += o.dur; return o;
+  });
+  return { list, total: totalMs };
+}
+
+const timelineEn = createTimeline(lyrics);
+const timelineEs = createTimeline(typeof lyrics_es !== "undefined" ? lyrics_es : lyrics);
+const ev_en = timelineEn.list;
+const ev_es = timelineEs.list;
+const total = timelineEn.total;
+
+function renderTimeline(timeline, t){
   let from = 0, img = null, out = "";
-  for (let i = 0; i < ev.length && ev[i].start <= t; i++){
-    if (ev[i].clear) from = i;
-    if (ev[i].image) img = ev[i].image;
+  for (let i = 0; i < timeline.length && timeline[i].start <= t; i++){
+    if (timeline[i].clear) { from = i; img = null; }
+    if (timeline[i].image) img = timeline[i].image;
   }
-  for (let i = from; i < ev.length && ev[i].start <= t; i++){
-    const e = ev[i], n = e.text.length;
-    if (n) out += e.text.slice(0, Math.min(n, Math.floor((t - e.start) / (e.dur / n)) + 1));
+  for (let i = from; i < timeline.length && timeline[i].start <= t; i++){
+    const e = timeline[i], n = e.text.length;
+    if (n) {
+      const chars = e.dur <= 0 ? n : Math.min(n, Math.floor((t - e.start) / (e.dur / n)) + 1);
+      out += e.text.slice(0, chars);
+    }
   }
   return [out, img];
 }
+
+/* Estado de idioma y transición */
+let currentLang = "en"; // "en" | "es"
+let isTransitioning = false;
+let transStartTime = 0;
+let transFrom = "en";
+let transTo = "es";
+const TRANS_DURATION = 1250; // 1.25 segundos para la onda completa
+const GLYPHS = "0123456789ABCDEF$#@%*+=-/;:?<>!~";
+
+function escapeHtml(s){
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function waveTransform(txtFrom, txtTo, progress){
+  const linesFrom = txtFrom.split("\n");
+  const linesTo = txtTo.split("\n");
+  const maxLines = Math.max(linesFrom.length, linesTo.length);
+  const waveWidth = 5;
+  const angleStagger = 0.8;
+  
+  let maxCol = 30;
+  for (let r = 0; r < maxLines; r++){
+    const l1 = (linesFrom[r] || "").length;
+    const l2 = (linesTo[r] || "").length;
+    if (l1 > maxCol) maxCol = l1;
+    if (l2 > maxCol) maxCol = l2;
+  }
+
+  const maxEffX = maxCol + Math.max(0, maxLines - 1) * angleStagger;
+  const totalRange = maxEffX + waveWidth * 2;
+  const waveFront = progress * totalRange - waveWidth;
+
+  const outLines = [];
+  for (let r = 0; r < maxLines; r++){
+    const sFrom = linesFrom[r] || "";
+    const sTo = linesTo[r] || "";
+    const len = Math.max(sFrom.length, sTo.length);
+    let lineHtml = "";
+
+    for (let c = 0; c < len; c++){
+      const effX = c + r * angleStagger;
+      const dist = waveFront - effX;
+
+      if (dist < 0){
+        if (c < sFrom.length) lineHtml += escapeHtml(sFrom[c]);
+      } else if (dist < waveWidth){
+        const glyph = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+        lineHtml += `<span class="wave-char">${escapeHtml(glyph)}</span>`;
+      } else {
+        if (c < sTo.length) lineHtml += escapeHtml(sTo[c]);
+      }
+    }
+    outLines.push(lineHtml);
+  }
+  return outLines.join("\n");
+}
+
+function toggleLang(){
+  const nextLang = (currentLang === "en") ? "es" : "en";
+  transFrom = currentLang;
+  transTo = nextLang;
+  currentLang = nextLang;
+  isTransitioning = true;
+  transStartTime = performance.now();
+
+  const btn = $("#btn-translate");
+  if (btn){
+    btn.textContent = (currentLang === "es") ? "Deshacer" : "Traducir";
+    btn.setAttribute("title", (currentLang === "es") ? "Volver a inglés" : "Traducir a español");
+  }
+}
+
+$("#btn-translate").addEventListener("click", e => {
+  e.stopPropagation();
+  toggleLang();
+});
+
+addEventListener("keydown", e => {
+  if (e.key === "t" || e.key === "T") toggleLang();
+});
 
 let t0 = 0, last = "";
 function frame(now){
@@ -103,13 +217,29 @@ function frame(now){
   const done = t > total;
   
   if (t >= 0){
-    const [txt, img] = render(t);
-    const key = txt + "|" + img + "|" + done;
+    const [txt_en, img] = renderTimeline(ev_en, t);
+    const [txt_es] = renderTimeline(ev_es, t);
+
+    let html = "";
+    if (isTransitioning){
+      const progress = Math.min(1, (now - transStartTime) / TRANS_DURATION);
+      const fromTxt = (transFrom === "es") ? txt_es : txt_en;
+      const toTxt = (transTo === "es") ? txt_es : txt_en;
+      html = waveTransform(fromTxt, toTxt, progress);
+      if (progress >= 1){
+        isTransitioning = false;
+      }
+    } else {
+      const currentTxt = (currentLang === "es") ? txt_es : txt_en;
+      html = escapeHtml(currentTxt);
+    }
+
+    const key = isTransitioning ? (now + "|" + img + "|" + done) : (currentLang + "|" + html + "|" + img + "|" + done);
     if (key !== last){
       last = key;
-      const L = $("#lyrics"); L.textContent = txt;
-      if (!done){ const c = document.createElement("span"); c.className = "cur"; L.appendChild(c); }
-      $("#art").textContent = img && ART[img] ? ART[img].join("\n") : "";
+      const L = $("#lyrics");
+      L.innerHTML = html + (!done ? '<span class="cur"></span>' : '');
+      $("#art").textContent = (typeof ART !== "undefined" && img && ART[img]) ? ART[img].join("\n") : "";
     }
   }
   requestAnimationFrame(frame);
