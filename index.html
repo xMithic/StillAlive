@@ -61,10 +61,10 @@ addEventListener("resize", fit); fit();
 function put(grid,r,c,s){ grid[r] = grid[r].slice(0,c) + s + grid[r].slice(c+s.length); }
 (function(){
   const g = Array.from({length:16}, () => " ".repeat(49));
-  put(g,2,14,"PORTAL - STILL ALIVE");
+  put(g,2,14,"STILL ALIVE");
   put(g,4,10,"Played by motherboard buzzer");
   put(g,13,1,"Based on still-alive by Dmitry Kotov");
-  put(g,14,1,"Original code by CATDIMA (GPL-3.0)");
+  put(g,14,1,"Original code by Miguel");
   $("#credits").textContent = g.join("\n");
 })();
 
