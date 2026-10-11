@@ -37,7 +37,7 @@ const lyrics_es = [
     T("Viva.\n", 4 * note8_ms),
     T(CLEAR + "Formularios FORM-55551-5:\n", note1_ms),
     T("Anexo al expediente personal:\n\n", note1_ms),
-    T("Estimado/a <<Sujeto de pruebas>>,\n\n", note1_ms),
+    T("Estimada <<Tester>>,\n\n", note1_ms),
     T("", 3 * note4_ms),
     T("Ni siquiera estoy enfadado...\n", 4 * note8_ms + note4_ms),
     T("", 5 * note4_ms),
