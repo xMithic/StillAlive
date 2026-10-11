@@ -38,17 +38,18 @@
 <script src="art.js"></script>
 <script src="lyrics.js"></script>
 <script>
-/* Ajustes (también por URL: ?offset=500&speed=1.02)
+/* Ajustes (también por URL: ?offset=500&speed=1.02&audioDelay=1000)
    OFFSET_MS: retraso de la letra respecto al audio (+ la retrasa, - la adelanta)
+   AUDIO_DELAY_MS: retraso con el que empezará a sonar la música en milisegundos
    SPEED: 1 = tiempos originales; >1 = letra más lenta */
 const q = new URLSearchParams(location.search);
 const OFFSET_MS = +(q.get("offset") ?? 0);
-const SPEED = +(q.get("speed") ?? 1);
+const AUDIO_DELAY_MS = +(q.get("audioDelay") ?? 2500); // Cambia este valor (en ms) para ajustar el retraso de la música
 
 const $ = s => document.querySelector(s);
 const audio = $("#song");
 let audioOk = true;
-audio.addEventListener("error", () => { audioOk = false; $("#warn").textContent = "No se encontró still-alive.mp3 (se mostrará solo la letra)"; });
+audio.addEventListener("error", () => { audioOk = false; $("#warn").textContent = "No se encontró still-alive.flac (se mostrará solo la letra)"; });
 
 /* Escala el tamaño para que los 102 caracteres quepan en pantalla */
 function fit(){
@@ -57,7 +58,7 @@ function fit(){
 }
 addEventListener("resize", fit); fit();
 
-/* Cuadro de créditos (igual que el original: título arriba, créditos abajo) */
+/* Cuadro de créditos */
 function put(grid,r,c,s){ grid[r] = grid[r].slice(0,c) + s + grid[r].slice(c+s.length); }
 (function(){
   const g = Array.from({length:16}, () => " ".repeat(49));
@@ -68,7 +69,7 @@ function put(grid,r,c,s){ grid[r] = grid[r].slice(0,c) + s + grid[r].slice(c+s.l
   $("#credits").textContent = g.join("\n");
 })();
 
-/* Línea de tiempo: cada evento empieza cuando termina el anterior */
+/* Línea de tiempo */
 let total = 0;
 const ev = lyrics.map(e => {
   let text = e.text, image = null, clear = false, m;
@@ -114,7 +115,14 @@ function frame(now){
 $("#start").addEventListener("click", () => {
   $("#start").remove();
   t0 = performance.now();
-  if (audioOk) audio.play().catch(() => { audioOk = false; });
+  
+  // Inicia la letra de inmediato y retrasa la reproducción del audio con AUDIO_DELAY_MS
+  if (audioOk) {
+    setTimeout(() => {
+      audio.play().catch(() => { audioOk = false; });
+    }, AUDIO_DELAY_MS);
+  }
+
   requestAnimationFrame(frame);
 });
 </script>
