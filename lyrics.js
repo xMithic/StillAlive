@@ -93,7 +93,7 @@ const lyrics = [
     T(IMG.BLACKMESA + "Maybe Black Mesa?\n", 3 * note4_ms),
     T("", note1_ms + note4_ms),
     T("THAT WAS A JOKE. ", 2 * note4_ms + note8_ms),
-    T("", 5 * note8_ms),
+    T("", 5 * note16_ms),
     T(" FAT CHANCE.\n", note4_ms + note2_ms),
     T("", note2_ms),
     T(IMG.CAKE + "Anyway this cake is great!\n", note1_ms + note2_ms + note8_ms),
