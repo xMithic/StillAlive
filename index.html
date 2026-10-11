@@ -43,7 +43,7 @@
    AUDIO_DELAY_MS: milisegundos de retraso para que empiece a sonar la música */
 const q = new URLSearchParams(location.search);
 const OFFSET_MS = +(q.get("offset") ?? 0);
-const AUDIO_DELAY_MS = +(q.get("audioDelay") ?? 1500); // Cambia este valor para ajustar el retraso de la música
+const AUDIO_DELAY_MS = +(q.get("audioDelay") ?? 3500); // Cambia este valor para ajustar el retraso de la música
 
 const $ = s => document.querySelector(s);
 const audio = $("#song");
