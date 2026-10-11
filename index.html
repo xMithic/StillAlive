@@ -296,16 +296,3 @@ $("#start").addEventListener("click", () => {
 </script>
 </body>
 </html>
-) => {
-    const langContainer = $("#lang-container");
-    langContainer.style.display = "flex";
-    langContainer.offsetHeight; // Forzar reflow para activar la animación de opacidad
-    langContainer.classList.add("show");
-  }, BUTTON_DELAY_MS);
-
-  // 5. Arranca el bucle de renderizado de la letra
-  requestAnimationFrame(frame);
-});
-</script>
-</body>
-</html>
