@@ -25,9 +25,13 @@
     align-items:center;justify-content:center;gap:1em;cursor:pointer;text-align:center}
   #start b{letter-spacing:.25em;font-size:1.5rem}
   #start small{opacity:.65}
-  /* Contenedor del botón a la izquierda */
+  
+  /* Contenedor del botón a la izquierda (inicialmente oculto para el efecto de aparición) */
   #lang-container{position:fixed;left:2.5rem;top:50%;transform:translateY(-50%);z-index:20;
-    display:flex;flex-direction:column;gap:0.4em;align-items:flex-start}
+    display:flex;flex-direction:column;gap:0.4em;align-items:flex-start;
+    opacity: 0; visibility: hidden; transition: opacity 1s ease;}
+  #lang-container.show { opacity: 1; visibility: visible; }
+
   #btn-translate{font-family:inherit;font-size:1rem;color:var(--fg);background:#000;
     border:1px solid var(--fg);padding:0.6em 1.2ch;cursor:pointer;
     text-shadow:0 0 5px rgba(255,176,0,.55);letter-spacing:.15em;text-transform:uppercase;
@@ -247,7 +251,6 @@ function frame(now){
 
 $("#start").addEventListener("click", () => {
   // 1. Oculta y remueve la pantalla de inicio inmediatamente
-  $("#start.remove")?.remove();
   const startScreen = $("#start");
   if (startScreen) startScreen.remove();
 
@@ -261,7 +264,12 @@ $("#start").addEventListener("click", () => {
     }, AUDIO_DELAY_MS);
   }
 
-  // 4. Arranca el bucle de renderizado de la letra
+  // 4. Mostrar el botón de traducir suavemente después de ~7 segundos (7000 ms)
+  setTimeout(() => {
+    $("#lang-container").classList.add("show");
+  }, 7000);
+
+  // 5. Arranca el bucle de renderizado de la letra
   requestAnimationFrame(frame);
 });
 </script>
