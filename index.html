@@ -37,21 +37,24 @@
     border:1px solid var(--fg); padding:0.6em 1.2ch; cursor:pointer;
     text-shadow:0 0 5px rgba(255,176,0,.55); letter-spacing:.15em; text-transform:uppercase;
     box-shadow:0 0 10px rgba(255,176,0,.2);
-    transition: background 0.4s ease, color 0.4s ease, box-shadow 0.4s ease, text-shadow 0.4s ease, transform .2s ease;
+    /* Transición suave tanto al entrar como al salir del estado presionado */
+    transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, text-shadow 0.3s ease, transform .2s ease;
     outline: none;
-    -webkit-tap-highlight-color: transparent; /* Elimina el cuadro azul/gris al tocar en móviles */
+    -webkit-tap-highlight-color: transparent;
   }
   
-  /* Efecto hover en PC */
-  #btn-translate:hover{background:var(--fg);color:#000;box-shadow:0 0 18px rgba(255,176,0,.7);text-shadow:none}
-  #btn-translate:active{transform:scale(.95)}
-  
-  /* Destello temporal suave al hacer clic (durará exactamente 1 segundo) */
-  #btn-translate.active-flash {
+  /* En PC el hover normal de escritorio */
+  @media (hover: hover) {
+    #btn-translate:hover{background:var(--fg);color:#000;box-shadow:0 0 18px rgba(255,176,0,.7);text-shadow:none}
+  }
+
+  /* El botón se pone naranja instantáneamente y de forma suave cuando se MANTIENE presionado (tanto en PC como al tocar la pantalla táctil) */
+  #btn-translate:active {
     background: var(--fg) !important;
     color: #000 !important;
     box-shadow: 0 0 18px rgba(255,176,0,.7) !important;
     text-shadow: none !important;
+    transform: scale(.95);
   }
 
   @media (max-width: 900px){
@@ -83,7 +86,7 @@
    ========================================================================= */
 const OFFSET_MS = 0;              // Retraso general de sincronización
 const AUDIO_DELAY_MS = 6750;      // Milisegundos para que empiece a sonar la música
-const BUTTON_DELAY_MS = 7600;     // Milisegundos para que aparezca el botón de traducir (8s)
+const BUTTON_DELAY_MS = 8000;     // Milisegundos para que aparezca el botón de traducir (8s)
 /* ========================================================================= */
 
 const q = new URLSearchParams(location.search);
@@ -207,8 +210,6 @@ function waveTransform(txtFrom, txtTo, progress){
   return outLines.join("\n");
 }
 
-let flashTimeout = null;
-
 function toggleLang(){
   const nextLang = (currentLang === "en") ? "es" : "en";
   transFrom = currentLang;
@@ -221,17 +222,6 @@ function toggleLang(){
   if (btn){
     btn.textContent = (currentLang === "es") ? "Deshacer" : "Traducir";
     btn.setAttribute("title", (currentLang === "es") ? "Volver a inglés" : "Traducir a español");
-
-    // Reinicia el temporizador si se pulsa rápidamente de nuevo
-    if (flashTimeout) clearTimeout(flashTimeout);
-
-    // Activa la clase del destello
-    btn.classList.add("active-flash");
-
-    // Remueve la clase exactamente 1 segundo después para que regrese suavemente a los bordes
-    flashTimeout = setTimeout(() => {
-      btn.classList.remove("active-flash");
-    }, 1000);
   }
 }
 
