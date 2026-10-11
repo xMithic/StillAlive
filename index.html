@@ -277,6 +277,18 @@ $("#start").addEventListener("click", () => {
   // 2. Inicia el contador de tiempo visual al instante
   t0 = performance.now();
 
+  // --- TRUCO ANTI-BLOQUEO PARA INSTAGRAM ---
+  // Desbloqueamos el audio inmediatamente tocando y silenciando un instante dentro del evento del usuario.
+  if (audioOk) {
+    audio.volume = 0;
+    audio.play().then(() => {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = 1; // Restauramos el volumen
+    }).catch(() => {});
+  }
+  // ------------------------------------------
+
   // 3. Reproduce la música aplicando el retraso configurado
   if (audioOk) {
     setTimeout(() => {
