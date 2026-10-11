@@ -26,11 +26,11 @@
   #start b{letter-spacing:.25em;font-size:1.5rem}
   #start small{opacity:.65}
   
-  /* Contenedor del botón a la izquierda (inicialmente oculto para el efecto de aparición) */
+  /* Contenedor del botón a la izquierda (oculto por defecto) */
   #lang-container{position:fixed;left:2.5rem;top:50%;transform:translateY(-50%);z-index:20;
     display:flex;flex-direction:column;gap:0.4em;align-items:flex-start;
-    opacity: 0; visibility: hidden; transition: opacity 1s ease;}
-  #lang-container.show { opacity: 1; visibility: visible; }
+    display: none; opacity: 0; transition: opacity 1.5s ease;}
+  #lang-container.show { display: flex; opacity: 1; }
 
   #btn-translate{font-family:inherit;font-size:1rem;color:var(--fg);background:#000;
     border:1px solid var(--fg);padding:0.6em 1.2ch;cursor:pointer;
@@ -62,13 +62,15 @@
 <script src="lyrics.js"></script>
 <script src="lyrics-es.js"></script>
 <script>
-/* Ajustes (también por URL: ?offset=500&speed=1.02&audioDelay=1500)
-   OFFSET_MS: retraso general de sincronización
-   AUDIO_DELAY_MS: milisegundos de retraso para que empiece a sonar la música */
-const q = new URLSearchParams(location.search);
-const OFFSET_MS = +(q.get("offset") ?? 0);
-const AUDIO_DELAY_MS = +(q.get("audioDelay") ?? 6750); // Cambia este valor para ajustar el retraso de la música
+/* =========================================================================
+   AJUSTES PRINCIPALES (Puedes modificarlos fácilmente aquí)
+   ========================================================================= */
+const OFFSET_MS = 0;              // Retraso general de sincronización
+const AUDIO_DELAY_MS = 6750;      // Milisegundos para que empiece a sonar la música
+const BUTTON_DELAY_MS = 7000;     // Milisegundos para que aparezca el botón de traducir (7000ms = 7s)
+/* ========================================================================= */
 
+const q = new URLSearchParams(location.search);
 const $ = s => document.querySelector(s);
 const audio = $("#song");
 let audioOk = true;
@@ -215,7 +217,6 @@ addEventListener("keydown", e => {
 
 let t0 = 0, last = "";
 function frame(now){
-  // Tiempo basado en el reloj interno del navegador desde que se hizo clic
   const elapsed = now - t0;
   const t = elapsed - OFFSET_MS;
   const done = t > total;
@@ -257,17 +258,20 @@ $("#start").addEventListener("click", () => {
   // 2. Inicia el contador de tiempo visual al instante
   t0 = performance.now();
 
-  // 3. Reproduce la música aplicando el retraso configurado mediante setTimeout
+  // 3. Reproduce la música aplicando el retraso configurado
   if (audioOk) {
     setTimeout(() => {
       audio.play().catch(() => { audioOk = false; });
     }, AUDIO_DELAY_MS);
   }
 
-  // 4. Mostrar el botón de traducir suavemente después de ~7 segundos (7000 ms)
+  // 4. Muestra el botón de traducir suavemente según el tiempo configurado en BUTTON_DELAY_MS
   setTimeout(() => {
-    $("#lang-container").classList.add("show");
-  }, 7000);
+    const langContainer = $("#lang-container");
+    langContainer.style.display = "flex";
+    langContainer.offsetHeight; // Forzar reflow para activar la animación de opacidad
+    langContainer.classList.add("show");
+  }, BUTTON_DELAY_MS);
 
   // 5. Arranca el bucle de renderizado de la letra
   requestAnimationFrame(frame);
