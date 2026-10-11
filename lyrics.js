@@ -16,7 +16,7 @@ const lyrics = [
     T(" Forms FORM-29827281-12:\n", note2_ms),
     T("Test Assessment Report\n", note2_ms),
     T("\n\n", note2_ms),
-    T("", note4_ms+ note2_ms + note4_ms + note8_ms + note4_ms+ note2_ms + note4_ms + note8_ms + note4_ms+ note2_ms + note4_ms + note8_ms),
+    T("", note4_ms+ note2_ms + note4_ms + note8_ms + note4_ms+ note2_ms),
     T("This was a triumph.\n", 4 * note8_ms + note4_ms),
     T("", note4_ms+ note2_ms + note4_ms + note8_ms),
     T("I'm making a note here:\n", 6 * note8_ms + note4_ms),
