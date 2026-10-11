@@ -10,7 +10,7 @@
 
 const note1_ms = 2000, note2_ms = 1000, note4_ms = 500,
       note8_ms = 250, note4dot_ms = 750, note16_ms = 125;
-String T = "Text";
+
 const IMG = {};
 ["APERTURE","RADIATION","ATOM","HEART","EXPLOSION","FIRE","CHECK","BLACKMESA","CAKE","GLADOS"]
   .forEach(n => IMG[n] = "\u0001" + n + "\u0002");
