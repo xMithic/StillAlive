@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Still Alive</title>
+
 <style>
   :root{--fg:#ffb000;--bg:#000}
   *{box-sizing:border-box}
@@ -86,7 +87,10 @@
 <script>
 const OFFSET_MS = 0;              
 const AUDIO_DELAY_MS = 6750;      
-const BUTTON_DELAY_MS = 7600;     
+const BUTTON_DELAY_MS = 7600;
+
+// Switch para activar (true) o desactivar (false) el botón de traducir:
+const ENABLE_TRANSLATE = false; // <-- Cambia a false para desactivar el botón     
 
 const q = new URLSearchParams(location.search);
 const $ = s => document.querySelector(s);
@@ -102,12 +106,24 @@ addEventListener("resize", fit); fit();
 
 function put(grid,r,c,s){ grid[r] = grid[r].slice(0,c) + s + grid[r].slice(c+s.length); }
 (function(){
-  const g = Array.from({length:16}, () => " ".repeat(49));
-  put(g,2,14,"STILL ALIVE");
-  put(g,4,10,"Played by motherboard buzzer");
-  put(g,13,1,"Still Alive - Dmitry Kotov");
-  put(g,14,1,"by Miguel");
-  $("#credits").textContent = g.join("\n");
+  const base = Array.from({length:16}, () => " ".repeat(49));
+  put(base,2,20,"STILL ALIVE");
+  put(base,4,15,"Reproduciendose en la");
+  put(base,13,1,"Still Alive - Dmitry Kotov");
+  put(base,14,1,"by Miguel");
+
+  const frames = [".", "..", "...", ""];
+  let step = 0;
+
+  function renderCredits(){
+    const g = [...base];
+    put(g, 5, 16, "placa motherboard" + frames[step].padEnd(3, " "));
+    $("#credits").textContent = g.join("\n");
+    step = (step + 1) % frames.length;
+  }
+
+  renderCredits();
+  setInterval(renderCredits, 400);
 })();
 
 function SPEED_VAL(){ return +(q.get("speed") ?? 1); }
@@ -206,6 +222,7 @@ function waveTransform(txtFrom, txtTo, progress){
 }
 
 function toggleLang(){
+  if (!ENABLE_TRANSLATE) return;
   const nextLang = (currentLang === "en") ? "es" : "en";
   transFrom = currentLang;
   transTo = nextLang;
@@ -220,14 +237,19 @@ function toggleLang(){
   }
 }
 
-$("#btn-translate").addEventListener("click", e => {
-  e.stopPropagation();
-  toggleLang();
-});
+if (ENABLE_TRANSLATE) {
+  const btnTranslate = $("#btn-translate");
+  if (btnTranslate) {
+    btnTranslate.addEventListener("click", e => {
+      e.stopPropagation();
+      toggleLang();
+    });
+  }
 
-addEventListener("keydown", e => {
-  if (e.key === "t" || e.key === "T") toggleLang();
-});
+  addEventListener("keydown", e => {
+    if (e.key === "t" || e.key === "T") toggleLang();
+  });
+}
 
 let t0 = 0, last = "";
 function frame(now){
@@ -285,12 +307,16 @@ $("#start").addEventListener("click", () => {
     }, AUDIO_DELAY_MS);
   }
 
-  setTimeout(() => {
-    const langContainer = $("#lang-container");
-    langContainer.style.display = "flex";
-    langContainer.offsetHeight; 
-    langContainer.classList.add("show");
-  }, BUTTON_DELAY_MS);
+  if (ENABLE_TRANSLATE) {
+    setTimeout(() => {
+      const langContainer = $("#lang-container");
+      if (langContainer) {
+        langContainer.style.display = "flex";
+        langContainer.offsetHeight; 
+        langContainer.classList.add("show");
+      }
+    }, BUTTON_DELAY_MS);
+  }
 
   requestAnimationFrame(frame);
 });
