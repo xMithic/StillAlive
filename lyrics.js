@@ -52,7 +52,8 @@ const lyrics = [
     T("", 5 * note4_ms),
     T("I'm being so sincere right now.\n", note2_ms + note1_ms),
     T("", 4 * note4_ms),
-    T(IMG.HEART + "Even though you broke my heart,\n", 1 * note1_ms + 1 * note2_ms),
+    //Heart abajo
+    T(IMG.APERTURE + "Even though you broke my heart,\n", 1 * note1_ms + 1 * note2_ms),
     T("", 1 * note4_ms),
     T("And killed me.\n", 2 * note4_ms),
     T("", note4_ms + note2_ms + note4dot_ms),
