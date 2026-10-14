@@ -107,7 +107,7 @@ addEventListener("resize", fit); fit();
 function put(grid,r,c,s){ grid[r] = grid[r].slice(0,c) + s + grid[r].slice(c+s.length); }
 (function(){
   const base = Array.from({length:16}, () => " ".repeat(49));
-  put(base,2,19,"CORRIENDO SCRIPT");
+  put(base,2,19,"CORRIENDO SCRIPT...");
   put(base,4,15,"Reproduciendose en la");
   put(base,13,1,"Still Alive - Dmitry Kotov");
   put(base,14,1,"Showcase by Miguel");
