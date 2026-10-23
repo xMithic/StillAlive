@@ -236,17 +236,15 @@ $("btn-clear").addEventListener("click", () => {
 });
 
 /* ---------- Configuración de Supabase (rellena estos dos valores) ---------- */
-const SUPABASE_URL  = "https://TU-PROYECTO.supabase.co";
-const SUPABASE_ANON = "TU-ANON-KEY";
+const SUPABASE_URL  = "https://swwvftyyzqeizxsznmqw.supabase.co";
+const SUPABASE_ANON = "sb_publishable_5nuHOPhaxlF7ipKpsY8Jrw_dWEkzJXd";
 
 async function enviarVisita(v){
-  if (SUPABASE_URL.includes("TU-PROYECTO")) return; // aún sin configurar
-  try {
+    try {
     await fetch(SUPABASE_URL + "/rest/v1/visitas", {
       method: "POST",
       headers: {
         apikey: SUPABASE_ANON,
-        Authorization: "Bearer " + SUPABASE_ANON,
         "Content-Type": "application/json",
         Prefer: "return=minimal"
       },
