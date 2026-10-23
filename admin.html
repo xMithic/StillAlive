@@ -29,6 +29,7 @@
   th{opacity:.7;font-weight:normal}
   td.f{color:var(--warn)}
   #msg{color:var(--warn)}
+  button.del{padding:.15em .8ch;font-size:.75rem}
 </style>
 </head>
 <body>
@@ -55,6 +56,8 @@
       </select>
       <input id="fBuscar" placeholder="buscar IP, país, app...">
       <button id="csv" type="button">Exportar CSV</button>
+      <button id="delShown" type="button">Borrar mostradas</button>
+      <button id="delAll" type="button">Borrar todo</button>
       <button id="out" type="button">Salir</button>
     </div>
     <div class="stats" id="stats"></div>
@@ -62,7 +65,7 @@
       <table>
         <thead><tr>
           <th>Fecha</th><th>IP</th><th>País</th><th>Ciudad</th><th>ISP</th>
-          <th>Dispositivo</th><th>App</th><th>Origen</th><th>Idioma</th><th>Alertas</th>
+          <th>Dispositivo</th><th>App</th><th>Origen</th><th>Idioma</th><th>Alertas</th><th></th>
         </tr></thead>
         <tbody id="tb"></tbody>
       </table>
@@ -107,8 +110,9 @@ function render(){
       <td>${esc(r.pais)}</td><td>${esc(r.ciudad)}</td><td>${esc(r.isp)}</td>
       <td>${esc(r.dispositivo)} / ${esc(r.sistema)}</td><td>${esc(r.app)}</td>
       <td>${esc(r.origen)}</td><td>${esc(r.idioma)}</td>
-      <td class="${al ? "f" : ""}">${esc(al || "—")}</td></tr>`;
-  }).join("") || `<tr><td colspan="10">Sin resultados.</td></tr>`;
+      <td class="${al ? "f" : ""}">${esc(al || "—")}</td>
+      <td><button type="button" class="del" data-id="${r.id}" title="Borrar esta visita">✕</button></td></tr>`;
+  }).join("") || `<tr><td colspan="11">Sin resultados.</td></tr>`;
 }
 
 async function cargar(){
@@ -150,6 +154,42 @@ $("csv").onclick = () => {
   a.href = URL.createObjectURL(blob); a.download = "visitas.csv";
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+/* ---------- Borrar ---------- */
+async function borrarIds(ids){
+  // Se borra en bloques para no pasarse del largo de la URL
+  for (let i = 0; i < ids.length; i += 100){
+    const { error } = await db.from("visitas").delete().in("id", ids.slice(i, i + 100));
+    if (error) return error;
+  }
+  return null;
+}
+function avisar(error){
+  if (error) alert("No se pudo borrar: " + error.message + "\n(¿Creaste la regla de borrado en Supabase?)");
+}
+
+$("tb").addEventListener("click", async e => {
+  const b = e.target.closest("button.del");
+  if (!b) return;
+  if (!confirm("¿Borrar esta visita?")) return;
+  const { error } = await db.from("visitas").delete().eq("id", Number(b.dataset.id));
+  avisar(error); cargar();
+});
+
+$("delShown").onclick = async () => {
+  const ids = filtrados().map(r => r.id);
+  if (!ids.length) return alert("No hay visitas para borrar con el filtro actual.");
+  if (!confirm(`¿Borrar las ${ids.length} visitas que se están mostrando? No se puede deshacer.`)) return;
+  avisar(await borrarIds(ids)); cargar();
+};
+
+$("delAll").onclick = async () => {
+  if (!datos.length) return alert("El historial ya está vacío.");
+  if (!confirm("¿Borrar TODO el historial? No se puede deshacer.")) return;
+  if (prompt('Escribe BORRAR para confirmar:') !== "BORRAR") return;
+  const { error } = await db.from("visitas").delete().gt("id", 0);
+  avisar(error); cargar();
 };
 
 estado();
