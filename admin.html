@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin</title>
+<style>
+  :root{--fg:#ffb000;--bg:#000;--warn:#ff5a3c;--ok:#7dff7d}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg);
+    font-family:"Courier New",Consolas,monospace}
+  body{display:flex;justify-content:center;padding:1rem;text-shadow:0 0 5px rgba(255,176,0,.55)}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px)}
+  #wrap{width:100%;max-width:110ch;display:flex;flex-direction:column;gap:1rem}
+  .box{border:1px solid var(--fg);padding:1.2em 1.5ch;box-shadow:0 0 14px rgba(255,176,0,.2)}
+  h1{margin:0 0 1em;font-size:1.05rem;letter-spacing:.25em;text-transform:uppercase}
+  input,select,button{font:inherit;font-size:.9rem;color:var(--fg);background:#000;border:1px solid var(--fg);
+    padding:.55em 1.2ch;outline:none}
+  button{cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:.2s}
+  button:hover,button:active{background:var(--fg);color:#000;text-shadow:none}
+  .bar{display:flex;gap:1ch;flex-wrap:wrap;margin-bottom:1em;align-items:center}
+  .stats{display:flex;gap:2ch;flex-wrap:wrap;margin-bottom:1em;opacity:.9}
+  .ok{color:var(--ok)} .bad{color:var(--warn)}
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.8rem;white-space:nowrap}
+  th,td{text-align:left;padding:.4em 1.2ch;border-top:1px dashed rgba(255,176,0,.35)}
+  th{opacity:.7;font-weight:normal}
+  td.f{color:var(--warn)}
+  #msg{color:var(--warn)}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+  <div class="box" id="login">
+    <h1>&gt; Acceso admin</h1>
+    <div class="bar">
+      <input id="email" type="email" placeholder="correo" autocomplete="username">
+      <input id="pass" type="password" placeholder="contraseña" autocomplete="current-password">
+      <button id="go" type="button">Entrar</button>
+    </div>
+    <span id="msg"></span>
+  </div>
+
+  <div class="box" id="panel" hidden>
+    <h1>&gt; Visitas</h1>
+    <div class="bar">
+      <button id="reload" type="button">Actualizar</button>
+      <select id="fAlerta">
+        <option value="">Todas</option>
+        <option value="si">Solo con alertas</option>
+        <option value="no">Sin alertas</option>
+      </select>
+      <input id="fBuscar" placeholder="buscar IP, país, app...">
+      <button id="csv" type="button">Exportar CSV</button>
+      <button id="out" type="button">Salir</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Fecha</th><th>IP</th><th>País</th><th>Ciudad</th><th>ISP</th>
+          <th>Dispositivo</th><th>App</th><th>Origen</th><th>Idioma</th><th>Alertas</th>
+        </tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ---------- Rellena estos dos valores (los mismos de conexion.html) ---------- */
+const SUPABASE_URL  = "https://TU-PROYECTO.supabase.co";
+const SUPABASE_ANON = "TU-ANON-KEY";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let datos = [];
+
+function filtrados(){
+  const fa = $("fAlerta").value, q = $("fBuscar").value.trim().toLowerCase();
+  return datos.filter(r => {
+    const tiene = r.alertas && r.alertas.length;
+    if (fa === "si" && !tiene) return false;
+    if (fa === "no" && tiene) return false;
+    if (q && ![r.ip, r.pais, r.ciudad, r.isp, r.dispositivo, r.sistema, r.app, r.origen].join(" ").toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function render(){
+  const lista = filtrados();
+  const conAlerta = datos.filter(r => r.alertas && r.alertas.length).length;
+  $("stats").innerHTML =
+    `<span>Total: ${datos.length}</span><span>Mostrando: ${lista.length}</span>` +
+    `<span>IPs distintas: ${new Set(datos.map(r => r.ip)).size}</span>` +
+    `<span>Países: ${new Set(datos.map(r => r.pais).filter(Boolean)).size}</span>` +
+    `<span class="${conAlerta ? "bad" : "ok"}">Con alertas: ${conAlerta}</span>`;
+  $("tb").innerHTML = lista.map(r => {
+    const al = (r.alertas || []).join("; ");
+    return `<tr><td>${esc(new Date(r.creado).toLocaleString())}</td><td>${esc(r.ip)}</td>
+      <td>${esc(r.pais)}</td><td>${esc(r.ciudad)}</td><td>${esc(r.isp)}</td>
+      <td>${esc(r.dispositivo)} / ${esc(r.sistema)}</td><td>${esc(r.app)}</td>
+      <td>${esc(r.origen)}</td><td>${esc(r.idioma)}</td>
+      <td class="${al ? "f" : ""}">${esc(al || "—")}</td></tr>`;
+  }).join("") || `<tr><td colspan="10">Sin resultados.</td></tr>`;
+}
+
+async function cargar(){
+  const { data, error } = await db.from("visitas").select("*")
+    .order("creado", { ascending: false }).limit(1000);
+  if (error){ $("stats").innerHTML = `<span class="bad">Error: ${esc(error.message)}</span>`; return; }
+  datos = data || [];
+  render();
+}
+
+async function estado(){
+  const { data: { session } } = await db.auth.getSession();
+  $("login").hidden = !!session;
+  $("panel").hidden = !session;
+  if (session) cargar();
+}
+
+$("go").onclick = async () => {
+  $("msg").textContent = "";
+  const { error } = await db.auth.signInWithPassword({ email: $("email").value, password: $("pass").value });
+  if (error) $("msg").textContent = error.message;
+  $("pass").value = "";
+  estado();
+};
+$("pass").addEventListener("keydown", e => { if (e.key === "Enter") $("go").click(); });
+$("out").onclick = async () => { await db.auth.signOut(); datos = []; estado(); };
+$("reload").onclick = cargar;
+$("fAlerta").onchange = render;
+$("fBuscar").oninput = render;
+
+$("csv").onclick = () => {
+  const cols = ["creado","ip","pais","ciudad","isp","dispositivo","sistema","app","origen","idioma","pantalla","zona_horaria","zona_horaria_ip","conexion","alertas"];
+  const filas = filtrados().map(r => cols.map(c => {
+    const v = Array.isArray(r[c]) ? r[c].join("; ") : (r[c] ?? "");
+    return `"${String(v).replace(/"/g, '""')}"`;
+  }).join(","));
+  const blob = new Blob([[cols.join(","), ...filas].join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "visitas.csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+estado();
+</script>
+</body>
+</html>

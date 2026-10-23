@@ -5,40 +5,101 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Conexión</title>
 <style>
-  :root{--fg:#ffb000;--bg:#000}
+  :root{--fg:#ffb000;--bg:#000;--warn:#ff5a3c;--ok:#7dff7d}
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg);
     font-family:"Courier New",Consolas,monospace}
-  body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;
-    text-shadow:0 0 5px rgba(255,176,0,.55)}
+  body{display:flex;justify-content:center;padding:1rem;text-shadow:0 0 5px rgba(255,176,0,.55)}
   body::after{content:"";position:fixed;inset:0;pointer-events:none;
     background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px)}
-  #box{width:100%;max-width:60ch;border:1px solid var(--fg);padding:1.2em 1.5ch;
-    box-shadow:0 0 14px rgba(255,176,0,.2)}
-  h1{margin:0 0 1em;font-size:1.1rem;letter-spacing:.25em;text-transform:uppercase;font-weight:bold}
+  #wrap{width:100%;max-width:90ch;display:flex;flex-direction:column;gap:1rem}
+  .box{border:1px solid var(--fg);padding:1.2em 1.5ch;box-shadow:0 0 14px rgba(255,176,0,.2)}
+  h1,h2{margin:0 0 1em;font-size:1.05rem;letter-spacing:.25em;text-transform:uppercase}
   .row{display:flex;gap:1ch;padding:.35em 0;border-top:1px dashed rgba(255,176,0,.35)}
-  .row span:first-child{min-width:12ch;opacity:.7}
+  .row span:first-child{min-width:16ch;opacity:.7}
   .row span:last-child{word-break:break-word}
+  .ok{color:var(--ok)} .bad{color:var(--warn)}
   .cur{display:inline-block;width:1ch;height:1em;vertical-align:text-bottom;background:var(--fg);
     animation:b 1s steps(1) infinite}
   @keyframes b{50%{opacity:0}}
-  small{display:block;margin-top:1em;opacity:.55}
+  small{display:block;margin-top:1em;opacity:.6}
+  .tools{display:flex;gap:1ch;flex-wrap:wrap;margin-bottom:1em}
+  button{font-family:inherit;font-size:.85rem;color:var(--fg);background:#000;border:1px solid var(--fg);
+    padding:.5em 1.2ch;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:.2s}
+  button:hover,button:active{background:var(--fg);color:#000;text-shadow:none}
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.8rem;white-space:nowrap}
+  th,td{text-align:left;padding:.4em 1.2ch;border-top:1px dashed rgba(255,176,0,.35)}
+  th{opacity:.7;font-weight:normal}
+  td.flag{color:var(--warn)}
+  .stats{display:flex;gap:2ch;flex-wrap:wrap;margin-bottom:1em;opacity:.85}
 </style>
 </head>
 <body>
-<div id="box">
-  <h1>&gt; Conexión</h1>
-  <div class="row"><span>PAÍS</span><span id="pais">...</span></div>
-  <div class="row"><span>CIUDAD</span><span id="ciudad">...</span></div>
-  <div class="row"><span>DISPOSITIVO</span><span id="dispositivo">...</span></div>
-  <div class="row"><span>SISTEMA</span><span id="sistema">...</span></div>
-  <div class="row"><span>APP</span><span id="app">...</span></div>
-  <small id="nota"><span class="cur"></span></small>
+<div id="wrap">
+
+  <div class="box">
+    <h2>&gt; Aviso de privacidad</h2>
+    <small style="margin-top:0;opacity:.85">Al abrir esta página se registran tu IP, ubicación aproximada (país y ciudad),
+    dispositivo, app o navegador y la fecha y hora, con fines de seguridad y monitoreo.
+    Estos datos solo los ve el administrador y no se comparten con terceros.</small>
+  </div>
+
+  <div class="box">
+    <h1>&gt; Conexión actual</h1>
+    <div class="row"><span>FECHA Y HORA</span><span id="fecha">...</span></div>
+    <div class="row"><span>IP</span><span id="ip">...</span></div>
+    <div class="row"><span>PAÍS</span><span id="pais">...</span></div>
+    <div class="row"><span>CIUDAD</span><span id="ciudad">...</span></div>
+    <div class="row"><span>PROVEEDOR (ISP)</span><span id="isp">...</span></div>
+    <div class="row"><span>DISPOSITIVO</span><span id="dispositivo">...</span></div>
+    <div class="row"><span>SISTEMA</span><span id="sistema">...</span></div>
+    <div class="row"><span>APP / NAVEGADOR</span><span id="app">...</span></div>
+    <div class="row"><span>ORIGEN (REFERRER)</span><span id="ref">...</span></div>
+    <div class="row"><span>IDIOMA</span><span id="idioma">...</span></div>
+    <div class="row"><span>PANTALLA</span><span id="pantalla">...</span></div>
+    <div class="row"><span>ZONA HORARIA</span><span id="tz">...</span></div>
+    <div class="row"><span>CONEXIÓN</span><span id="red">...</span></div>
+    <div class="row"><span>ALERTAS</span><span id="alertas">...</span></div>
+    <small id="nota"><span class="cur"></span></small>
+  </div>
+
+  <div class="box">
+    <h2>&gt; Historial</h2>
+    <div class="stats" id="stats"></div>
+    <div class="tools">
+      <button id="btn-csv" type="button">Exportar CSV</button>
+      <button id="btn-json" type="button">Exportar JSON</button>
+      <button id="btn-clear" type="button">Borrar historial</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Fecha</th><th>Hora</th><th>IP</th><th>País</th><th>Ciudad</th>
+          <th>Dispositivo</th><th>App</th><th>Origen</th><th>Alertas</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <small>El historial se guarda solo en este navegador (localStorage), máximo 200 registros.
+    Este historial es solo de este dispositivo. Las visitas de todos las ve el administrador en su panel.</small>
+  </div>
+
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
 const ua = navigator.userAgent || "";
+const KEY = "conexion_historial_v1";
+const MAX = 200;
+
+/* ---------- Almacenamiento seguro ---------- */
+function cargar(){
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; }
+}
+function guardar(lista){
+  try { localStorage.setItem(KEY, JSON.stringify(lista.slice(-MAX))); return true; } catch(e){ return false; }
+}
 
 /* ---------- Dispositivo y sistema ---------- */
 function detectarDispositivo(){
@@ -52,13 +113,13 @@ function detectarDispositivo(){
   return ["Desconocido", "Desconocido"];
 }
 
-/* ---------- App / navegador desde donde se abre ---------- */
+/* ---------- App / navegador ---------- */
 function detectarApp(){
   const reglas = [
     [/Instagram/i, "Instagram"],
     [/TikTok|musical_ly|BytedanceWebview|Bytedance/i, "TikTok"],
+    [/Messenger/i, "Messenger"],
     [/FBAN|FBAV|FB_IAB|FBIOS/i, "Facebook"],
-    [/Messenger|FBAN\/Messenger/i, "Messenger"],
     [/WhatsApp/i, "WhatsApp"],
     [/Snapchat/i, "Snapchat"],
     [/Twitter|TwitterAndroid/i, "X (Twitter)"],
@@ -79,53 +140,172 @@ function detectarApp(){
   return "Desconocida";
 }
 
-const [disp, sis] = detectarDispositivo();
-$("dispositivo").textContent = disp;
-$("sistema").textContent = sis;
-$("app").textContent = detectarApp();
+/* ---------- Origen (referrer) ---------- */
+function detectarOrigen(){
+  if (!document.referrer) return "Directo / desconocido";
+  try { return new URL(document.referrer).hostname; } catch(e){ return "Desconocido"; }
+}
 
-/* ---------- País y ciudad (por IP) ---------- */
+/* ---------- Ubicación por IP ---------- */
 async function ubicacion(){
-  // Se prueban varias APIs gratuitas por si alguna falla o está limitada.
   const fuentes = [
     async () => {
-      const r = await fetch("https://ipwho.is/");
-      const d = await r.json();
+      const d = await (await fetch("https://ipwho.is/")).json();
       if (!d.success) throw 0;
-      return [d.country, d.city];
+      return { ip:d.ip, pais:d.country, ciudad:d.city, isp:(d.connection&&(d.connection.isp||d.connection.org))||"", tz:(d.timezone&&d.timezone.id)||"" };
     },
     async () => {
-      const r = await fetch("https://ipapi.co/json/");
-      const d = await r.json();
+      const d = await (await fetch("https://ipapi.co/json/")).json();
       if (d.error) throw 0;
-      return [d.country_name, d.city];
+      return { ip:d.ip, pais:d.country_name, ciudad:d.city, isp:d.org||"", tz:d.timezone||"" };
     },
     async () => {
-      const r = await fetch("https://get.geojs.io/v1/ip/geo.json");
-      const d = await r.json();
-      return [d.country, d.city];
+      const d = await (await fetch("https://get.geojs.io/v1/ip/geo.json")).json();
+      return { ip:d.ip, pais:d.country, ciudad:d.city, isp:d.organization_name||"", tz:d.timezone||"" };
     }
   ];
   for (const f of fuentes){
-    try {
-      const [pais, ciudad] = await f();
-      if (pais) return [pais, ciudad || "No disponible"];
-    } catch(e){}
+    try { const r = await f(); if (r && r.ip) return r; } catch(e){}
   }
   return null;
 }
 
-ubicacion().then(res => {
-  if (res){
-    $("pais").textContent = res[0];
-    $("ciudad").textContent = res[1];
-    $("nota").textContent = "Ubicación aproximada según tu IP.";
-  } else {
-    $("pais").textContent = "No disponible";
-    $("ciudad").textContent = "No disponible";
-    $("nota").textContent = "No se pudo obtener la ubicación (¿bloqueador de anuncios?).";
+/* ---------- Alertas de seguridad ---------- */
+function calcularAlertas(geo){
+  const a = [];
+  const tzNav = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  if (navigator.webdriver) a.push("Posible bot (webdriver)");
+  if (/bot|crawl|spider|headless|curl|wget|python|scrapy/i.test(ua)) a.push("User agent de bot");
+  if (geo && geo.tz && tzNav && geo.tz !== tzNav) a.push("Zona horaria ≠ IP (posible VPN/proxy)");
+  if (geo && /vpn|proxy|hosting|cloud|amazon|google llc|digitalocean|ovh|hetzner|datacenter|m247|nord|express/i.test(geo.isp || ""))
+    a.push("ISP de hosting/VPN");
+  if (!navigator.languages || !navigator.languages.length) a.push("Sin idioma declarado");
+  if (!ua) a.push("Sin user agent");
+  return a;
+}
+
+/* ---------- Utilidades ---------- */
+const pad = n => String(n).padStart(2, "0");
+const fechaStr = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const horaStr  = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------- Render historial ---------- */
+function renderHistorial(){
+  const lista = cargar();
+  const tb = $("tbody");
+  tb.innerHTML = lista.slice().reverse().map((r, i) => `
+    <tr>
+      <td>${lista.length - i}</td><td>${esc(r.fecha)}</td><td>${esc(r.hora)}</td>
+      <td>${esc(r.ip)}</td><td>${esc(r.pais)}</td><td>${esc(r.ciudad)}</td>
+      <td>${esc(r.dispositivo)} / ${esc(r.sistema)}</td><td>${esc(r.app)}</td>
+      <td>${esc(r.origen)}</td>
+      <td class="${r.alertas && r.alertas.length ? "flag" : ""}">${r.alertas && r.alertas.length ? esc(r.alertas.join("; ")) : "—"}</td>
+    </tr>`).join("") || `<tr><td colspan="10">Sin registros todavía.</td></tr>`;
+
+  const paises = new Set(lista.map(r => r.pais).filter(Boolean));
+  const ips = new Set(lista.map(r => r.ip).filter(Boolean));
+  const conAlerta = lista.filter(r => r.alertas && r.alertas.length).length;
+  $("stats").innerHTML =
+    `<span>Visitas: ${lista.length}</span><span>IPs distintas: ${ips.size}</span>` +
+    `<span>Países: ${paises.size}</span><span class="${conAlerta ? "bad" : "ok"}">Con alertas: ${conAlerta}</span>`;
+}
+
+/* ---------- Exportar / borrar ---------- */
+function descargar(nombre, contenido, tipo){
+  const blob = new Blob([contenido], { type: tipo });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$("btn-json").addEventListener("click", () => descargar("historial-conexion.json", JSON.stringify(cargar(), null, 2), "application/json"));
+$("btn-csv").addEventListener("click", () => {
+  const cols = ["fecha","hora","ip","pais","ciudad","isp","dispositivo","sistema","app","origen","idioma","pantalla","zonaHoraria","zonaHorariaIP","conexion","alertas"];
+  const filas = cargar().map(r => cols.map(c => {
+    const v = Array.isArray(r[c]) ? r[c].join("; ") : (r[c] ?? "");
+    return `"${String(v).replace(/"/g, '""')}"`;
+  }).join(","));
+  descargar("historial-conexion.csv", [cols.join(","), ...filas].join("\n"), "text/csv");
+});
+$("btn-clear").addEventListener("click", () => {
+  if (confirm("¿Borrar todo el historial de este navegador?")){
+    try { localStorage.removeItem(KEY); } catch(e){}
+    renderHistorial();
   }
 });
+
+/* ---------- Configuración de Supabase (rellena estos dos valores) ---------- */
+const SUPABASE_URL  = "https://TU-PROYECTO.supabase.co";
+const SUPABASE_ANON = "TU-ANON-KEY";
+
+async function enviarVisita(v){
+  if (SUPABASE_URL.includes("TU-PROYECTO")) return; // aún sin configurar
+  try {
+    await fetch(SUPABASE_URL + "/rest/v1/visitas", {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: "Bearer " + SUPABASE_ANON,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify(v)
+    });
+  } catch(e){}
+}
+
+/* ---------- Ejecución ---------- */
+(async function(){
+  const ahora = new Date();
+  const [disp, sis] = detectarDispositivo();
+  const app = detectarApp();
+  const origen = detectarOrigen();
+  const idioma = (navigator.languages && navigator.languages.join(", ")) || navigator.language || "—";
+  const pantalla = `${screen.width}x${screen.height} @${window.devicePixelRatio || 1}x`;
+  const tzNav = Intl.DateTimeFormat().resolvedOptions().timeZone || "—";
+  const c = navigator.connection || {};
+  const red = c.effectiveType ? `${c.effectiveType}${c.downlink ? " · " + c.downlink + " Mbps" : ""}` : "No disponible";
+
+  $("fecha").textContent = `${fechaStr(ahora)} ${horaStr(ahora)}`;
+  $("dispositivo").textContent = disp;
+  $("sistema").textContent = sis;
+  $("app").textContent = app;
+  $("ref").textContent = origen;
+  $("idioma").textContent = idioma;
+  $("pantalla").textContent = pantalla;
+  $("tz").textContent = tzNav;
+  $("red").textContent = red;
+
+  const geo = await ubicacion();
+  const alertas = calcularAlertas(geo);
+
+  $("ip").textContent = geo ? geo.ip : "No disponible";
+  $("pais").textContent = geo ? (geo.pais || "No disponible") : "No disponible";
+  $("ciudad").textContent = geo ? (geo.ciudad || "No disponible") : "No disponible";
+  $("isp").textContent = geo ? (geo.isp || "No disponible") : "No disponible";
+  const al = $("alertas");
+  al.textContent = alertas.length ? alertas.join(" | ") : "Sin alertas";
+  al.className = alertas.length ? "bad" : "ok";
+  $("nota").textContent = geo ? "Ubicación aproximada según la IP." : "No se pudo obtener la ubicación (¿bloqueador de anuncios?).";
+
+  const lista = cargar();
+  lista.push({
+    ts: ahora.getTime(), fecha: fechaStr(ahora), hora: horaStr(ahora),
+    ip: geo ? geo.ip : "", pais: geo ? geo.pais : "", ciudad: geo ? geo.ciudad : "", isp: geo ? geo.isp : "",
+    dispositivo: disp, sistema: sis, app, origen, idioma, pantalla,
+    zonaHoraria: tzNav, zonaHorariaIP: geo ? geo.tz : "", conexion: red, alertas
+  });
+  if (!guardar(lista)) $("nota").textContent += " (No se pudo guardar el historial: almacenamiento bloqueado.)";
+  enviarVisita({
+    ip: geo ? geo.ip : null, pais: geo ? geo.pais : null,
+    ciudad: geo ? geo.ciudad : null, isp: geo ? geo.isp : null,
+    dispositivo: disp, sistema: sis, app, origen, idioma, pantalla,
+    zona_horaria: tzNav, zona_horaria_ip: geo ? geo.tz : null,
+    conexion: red, alertas
+  });
+  renderHistorial();
+})();
 </script>
 </body>
 </html>
