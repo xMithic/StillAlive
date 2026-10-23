@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conexión</title>
+<style>
+  :root{--fg:#ffb000;--bg:#000}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg);
+    font-family:"Courier New",Consolas,monospace}
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;
+    text-shadow:0 0 5px rgba(255,176,0,.55)}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px)}
+  #box{width:100%;max-width:60ch;border:1px solid var(--fg);padding:1.2em 1.5ch;
+    box-shadow:0 0 14px rgba(255,176,0,.2)}
+  h1{margin:0 0 1em;font-size:1.1rem;letter-spacing:.25em;text-transform:uppercase;font-weight:bold}
+  .row{display:flex;gap:1ch;padding:.35em 0;border-top:1px dashed rgba(255,176,0,.35)}
+  .row span:first-child{min-width:12ch;opacity:.7}
+  .row span:last-child{word-break:break-word}
+  .cur{display:inline-block;width:1ch;height:1em;vertical-align:text-bottom;background:var(--fg);
+    animation:b 1s steps(1) infinite}
+  @keyframes b{50%{opacity:0}}
+  small{display:block;margin-top:1em;opacity:.55}
+</style>
+</head>
+<body>
+<div id="box">
+  <h1>&gt; Conexión</h1>
+  <div class="row"><span>PAÍS</span><span id="pais">...</span></div>
+  <div class="row"><span>CIUDAD</span><span id="ciudad">...</span></div>
+  <div class="row"><span>DISPOSITIVO</span><span id="dispositivo">...</span></div>
+  <div class="row"><span>SISTEMA</span><span id="sistema">...</span></div>
+  <div class="row"><span>APP</span><span id="app">...</span></div>
+  <small id="nota"><span class="cur"></span></small>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const ua = navigator.userAgent || "";
+
+/* ---------- Dispositivo y sistema ---------- */
+function detectarDispositivo(){
+  if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return ["Tablet", "iPadOS"];
+  if (/iPhone|iPod/i.test(ua)) return ["Móvil", "iOS"];
+  if (/Android/i.test(ua)) return [/Mobile/i.test(ua) ? "Móvil" : "Tablet", "Android"];
+  if (/Windows/i.test(ua)) return ["PC", "Windows"];
+  if (/Macintosh|Mac OS X/i.test(ua)) return ["PC", "macOS"];
+  if (/CrOS/i.test(ua)) return ["PC", "ChromeOS"];
+  if (/Linux/i.test(ua)) return ["PC", "Linux"];
+  return ["Desconocido", "Desconocido"];
+}
+
+/* ---------- App / navegador desde donde se abre ---------- */
+function detectarApp(){
+  const reglas = [
+    [/Instagram/i, "Instagram"],
+    [/TikTok|musical_ly|BytedanceWebview|Bytedance/i, "TikTok"],
+    [/FBAN|FBAV|FB_IAB|FBIOS/i, "Facebook"],
+    [/Messenger|FBAN\/Messenger/i, "Messenger"],
+    [/WhatsApp/i, "WhatsApp"],
+    [/Snapchat/i, "Snapchat"],
+    [/Twitter|TwitterAndroid/i, "X (Twitter)"],
+    [/LinkedInApp/i, "LinkedIn"],
+    [/Pinterest/i, "Pinterest"],
+    [/Line\//i, "LINE"],
+    [/Telegram/i, "Telegram"],
+    [/Discord/i, "Discord"],
+    [/MicroMessenger/i, "WeChat"],
+    [/EdgA|EdgiOS|Edg\//i, "Edge"],
+    [/OPR\/|Opera/i, "Opera"],
+    [/SamsungBrowser/i, "Samsung Internet"],
+    [/Firefox|FxiOS/i, "Firefox"],
+    [/CriOS|Chrome\//i, "Chrome"],
+    [/Safari\//i, "Safari"]
+  ];
+  for (const [re, nombre] of reglas) if (re.test(ua)) return nombre;
+  return "Desconocida";
+}
+
+const [disp, sis] = detectarDispositivo();
+$("dispositivo").textContent = disp;
+$("sistema").textContent = sis;
+$("app").textContent = detectarApp();
+
+/* ---------- País y ciudad (por IP) ---------- */
+async function ubicacion(){
+  // Se prueban varias APIs gratuitas por si alguna falla o está limitada.
+  const fuentes = [
+    async () => {
+      const r = await fetch("https://ipwho.is/");
+      const d = await r.json();
+      if (!d.success) throw 0;
+      return [d.country, d.city];
+    },
+    async () => {
+      const r = await fetch("https://ipapi.co/json/");
+      const d = await r.json();
+      if (d.error) throw 0;
+      return [d.country_name, d.city];
+    },
+    async () => {
+      const r = await fetch("https://get.geojs.io/v1/ip/geo.json");
+      const d = await r.json();
+      return [d.country, d.city];
+    }
+  ];
+  for (const f of fuentes){
+    try {
+      const [pais, ciudad] = await f();
+      if (pais) return [pais, ciudad || "No disponible"];
+    } catch(e){}
+  }
+  return null;
+}
+
+ubicacion().then(res => {
+  if (res){
+    $("pais").textContent = res[0];
+    $("ciudad").textContent = res[1];
+    $("nota").textContent = "Ubicación aproximada según tu IP.";
+  } else {
+    $("pais").textContent = "No disponible";
+    $("ciudad").textContent = "No disponible";
+    $("nota").textContent = "No se pudo obtener la ubicación (¿bloqueador de anuncios?).";
+  }
+});
+</script>
+</body>
+</html>
